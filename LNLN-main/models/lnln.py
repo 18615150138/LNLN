@@ -187,7 +187,7 @@ class LNLN(nn.Module):
 
             complete_feats = torch.cat([complete_audio_feat, complete_vision_feat, complete_language_feat], dim=1) # as the label of reconstruction
 
-        #output是dmml模块的输出，w是完备性检测器的输出，effectiveness_discriminator_out是检测器的输出，rec_feats是再现器的输出结果（特征向量），complete_feats是以无人工设置缺失数据得到的特征向量
+        #output是dmml模块的输出即为情绪预测值，w是完备性检测器的输出，effectiveness_discriminator_out是检测器的输出，rec_feats是再现器的输出结果（特征向量），complete_feats是以无人工设置缺失数据得到的特征向量
         return {'sentiment_preds': output,
                 'w': w,
                 'effectiveness_discriminator_out': effectiveness_discriminator_out,

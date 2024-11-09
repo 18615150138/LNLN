@@ -1,4 +1,6 @@
 import os
+
+import pandas as pd
 import torch
 import yaml #用于读取YAML格式的配置文件。
 import argparse
@@ -32,7 +34,16 @@ def main():
     best_valid_results, best_test_results = {}, {}
 
     #sims
+    print('experiment on sims')
     config_file = 'configs/train_sims.yaml' if opt.config_file == '' else opt.config_file
+
+    # #mosi
+    # print('experiment on mosi')
+    # config_file = 'configs/train_mosi.yaml' if opt.config_file == '' else opt.config_file
+
+    # #mosei
+    # print('experiment on mosei')
+    # config_file = 'configs/train_mosei.yaml' if opt.config_file == '' else opt.config_file
 
     with open(config_file) as f:
         args = yaml.load(f, Loader=yaml.FullLoader)
@@ -90,6 +101,8 @@ def main():
         end_time=time.time()
         elapsed_time = end_time - start_time
         print(f'Epoch {epoch} completed in {elapsed_time:.2f} seconds\n') #一次36.55s 200次得跑2h
+        if epoch ==1:
+            break
 
 
 def train(model, train_loader, optimizer, loss_fn, epoch, metrics):
@@ -126,6 +139,7 @@ def train(model, train_loader, optimizer, loss_fn, epoch, metrics):
         optimizer.zero_grad()
 
         y_pred.append(out['sentiment_preds'].cpu())
+
         y_true.append(label['sentiment_labels'].cpu())
 
         if cur_iter == 0:
@@ -136,6 +150,17 @@ def train(model, train_loader, optimizer, loss_fn, epoch, metrics):
                 loss_dict[key] += value.item()
 
     pred, true = torch.cat(y_pred), torch.cat(y_true)
+
+    # 假设 pred 和 true 是 PyTorch 张量
+    pred_np = pred.detach().numpy().flatten()
+    true_np = true.detach().numpy().flatten()
+
+    # 创建一个 DataFrame
+    df = pd.DataFrame({'Predicted': pred_np, 'True': true_np})
+
+    # 保存到 CSV 文件
+    df.to_csv('./Dataset/pred_and_true.csv', index=False)
+
     results = metrics(pred, true)
 
     loss_dict = {key: value / (cur_iter+1) for key, value in loss_dict.items()}

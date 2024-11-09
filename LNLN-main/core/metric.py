@@ -13,7 +13,7 @@ class MetricsTop():
             }
         else:
             raise AssertionError 
-
+    #这里应该可以改成回归准确率的测量
     def __multiclass_acc(self, y_pred, y_true):
         """
         Compute the multiclass accuracy w.r.t. groundtruth
@@ -21,25 +21,30 @@ class MetricsTop():
         :param truths: Float/int array representing the groundtruth classes, dimension (N,)
         :return: Classification accuracy
         """
+        #np.round 将预测值和真实值都四舍五入到最近的整数
         return np.sum(np.round(y_pred) == np.round(y_true)) / float(len(y_true))
 
     def __eval_mosei_regression(self, y_pred, y_true, exclude_zero=False):
         test_preds = y_pred.view(-1).cpu().detach().numpy()
         test_truth = y_true.view(-1).cpu().detach().numpy()
-
+        #数据裁剪
         test_preds_a7 = np.clip(test_preds, a_min=-3., a_max=3.)
         test_truth_a7 = np.clip(test_truth, a_min=-3., a_max=3.)
+        mult_a7 = self.__multiclass_acc(test_preds_a7, test_truth_a7)
+        # 由于是将test_preds_a7和test_truth_a7都裁剪到[-3,3]之间，在self.__multiclass_acc是先np.round再计数“==”，所以是7分类
+
         test_preds_a5 = np.clip(test_preds, a_min=-2., a_max=2.)
         test_truth_a5 = np.clip(test_truth, a_min=-2., a_max=2.)
+        mult_a5 = self.__multiclass_acc(test_preds_a5, test_truth_a5)
+
         test_preds_a3 = np.clip(test_preds, a_min=-1., a_max=1.)
         test_truth_a3 = np.clip(test_truth, a_min=-1., a_max=1.)
-
+        mult_a3 = self.__multiclass_acc(test_preds_a3, test_truth_a3)
 
         mae = np.mean(np.absolute(test_preds - test_truth))   # Average L1 distance between preds and truths
+
         corr = np.corrcoef(test_preds, test_truth)[0][1]
-        mult_a7 = self.__multiclass_acc(test_preds_a7, test_truth_a7)
-        mult_a5 = self.__multiclass_acc(test_preds_a5, test_truth_a5)
-        mult_a3 = self.__multiclass_acc(test_preds_a3, test_truth_a3)
+
         
         non_zeros = np.array([i for i, e in enumerate(test_truth) if e != 0])
         non_zeros_binary_truth = (test_truth[non_zeros] > 0)

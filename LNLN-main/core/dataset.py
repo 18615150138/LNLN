@@ -28,12 +28,17 @@ class MMDataset(Dataset):
     def __init_mosi(self):
         with open(self.dataPath, 'rb') as f:
             data = pickle.load(f)
-        
-        self.data = data
+        self.data = data #这是个引用方式，相当于没开新内存
 
         self.text = data[self.mode]['text_bert'].astype(np.float32)
         self.vision = data[self.mode]['vision'].astype(np.float32)
         self.audio = data[self.mode]['audio'].astype(np.float32)
+
+        # #when run on mosei dataset ,it well warning memoryerror
+        # self.vision = data[self.mode]['vision'].astype(np.float16)
+        # #这个是创建了新对象保存数据，要开新内存，所以这就是为什么不管是先存self.data=data,后存self.vision还是先存self.vision,后存self.data=data爆内存的原因
+        # self.audio = data[self.mode]['audio'].astype(np.float16)
+
 
         self.rawText = data[self.mode]['raw_text']
         self.ids = data[self.mode]['id']
